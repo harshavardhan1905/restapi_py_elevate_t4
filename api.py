@@ -58,8 +58,46 @@ def post_data():
     except mysql.connector.Error as err:
         return jsonify({"Error": err}), 500
 
+#api for updating data
+@app.route("/update/<int:id>", methods=['PUT'])
+def update_data(id):
+    try:
+        data = request.get_json()
+        firstname = data.get('firstname')
+        lastname = data.get('lastname')
 
+        if not firstname or not lastname:
+            return jsonify({"error":"Both first and lastnames are required"}), 400
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
 
+        #query to update
+        cursor.execute("""UPDATE elevate_t4 
+                        set firstname = %s, lastname = %s
+                        where id = %s""",(firstname, lastname, id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"message":"data updated successfully"})
+    except mysql.connector.Error as err:
+        return jsonify({"Error": str(err)})
+@app.route("/delete/id/<int:id>", methods=['DELETE'])
+def delete_data(id):
+    try:
+        # data = request.get_json()
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        # total = cursor.execute("select count(*) as total from elevate_t4")
+        # if(total<=0):
+        #     return "tables has 0 rows"
+        cursor.execute("DELETE FROM elevate_t4 WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"Message":"Deleted data"})
+    except mysql.connector.Error as err:
+        return jsonify({"errors": str(err)})
 #running api
 if __name__ == '__main__':
     app.run(debug=True)
